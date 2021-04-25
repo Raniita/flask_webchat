@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Webchat</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+
+</head>
+<body>
+    <script type="text/javascript" charset="utf-8">
+        const socket = io();
+        socket.on("server_message", (data) => {
+            let e = document.createElement("p");
+            let sp = document.createElement("span");
+            sp.innerHTML = data.nickname;
+            e.appendChild(sp);
+            e.innerHTML = e.innerHTML + ">> " + data.message;
+
+            if(document.getElementById("message-box").children.length>20){
+                document.getElementById("message-box").removeChild(document.getElementById("message-box").children[0]);
+            }
+
+            document.getElementById("message-box").appendChild(e);
+
+            document.getElementById("message-box").scroll(0, document.getElementById("message-box").scrollHeight);
+        });
+
+        function htmlEntities(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function sendMessage() {
+            socket.emit('client_message',
+                { 'nickname': htmlEntities(document.getElementById('nickname-input').value), 
+                  'message': htmlEntities(document.getElementById('message-input').value) });
+            document.getElementById('message-input').value = '';
+        }
+
+        function isPressingEnter(e) {
+            let k;
+            if (window.event) {
+                k = e.keyCode;
+                if (k === 13) {
+                    sendMessage();
+                }
+            } else if (e.which) {
+                k = e.which;
+                if (k === 13) {
+                    sendMessage();
+                }
+            }
+        }
+    </script>
+    
+    <h1 id="title">Flask webchat</h1>
+
+    <section id="chat-box">
+        <section id="message-box">
+        </section>
+    
+        <section id="input-box">
+            <input type="text" autofocus onkeypress="return isPressingEnter(event)" required
+                placeholder="Write message here" id="message-input">
+            <button type="button" id="send-button" onclick="sendMessage()">>></button>
+        </section>
+    </section>
+    
+    <section id="nickname-box">
+        <label id="nickname-label" for="nickname-input">Nickname: </label>
+        <input type="text" id="nickname-input" autocomplete="off" value="Guest">
+    </section>
+
+</body>
+</html>
